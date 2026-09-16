@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+pydantic
+redis
+qdrant-client
+ollama
+langchain
+langchain-ollama
+langgraph
+prometheus-fastapi-instrumentator
+pydantic_settings
+pythonjsonlogger
