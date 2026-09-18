@@ -1,0 +1,12 @@
+fastapi==0.141.1
+uvicorn==0.40.0
+pydantic==2.11.9
+redis==8.1.0
+qdrant-client==1.16.2
+ollama==0.6.1
+langchain==1.4.1
+langchain-ollama==1.1.0
+langgraph==1.2.11
+prometheus-fastapi-instrumentator==8.1.0
+pydantic_settings==2.10.1
+pytest-asyncio==1.4.0

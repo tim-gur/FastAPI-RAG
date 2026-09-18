@@ -1,23 +1,32 @@
 from ollama import AsyncClient
-from fastapi import FastAPI, Body
+from fastapi import FastAPI, Body, HTTPException
 from contextlib import asynccontextmanager
-import logging
-from qdrant import qdrant_startup, qdrant_stop
-from session import get_state, save_state
-from agent import llm_app
 from langchain_core.messages import HumanMessage
-from logging import setup_logging
 from pydantic import BaseModel
 
-# логирование
-setup_logging()
-logger = logging.getLogger(__name__)
+from app.qdrant import qdrant_startup, qdrant_stop
+from app.session import init_db, get_state, save_state
+from app.agent import llm_app
+
+from app.logger import logger
+from app.settings import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """Инициализация при запуске и очистка при завершении"""
-    await qdrant_startup()
+    try:
+        await qdrant_startup()
+        logger.info('Qdrant загружен')
+    except Exception as e:
+        logger.exception(f'Qdrant не смог загрузиться: {e}')
+        raise
 
+    try:
+        init_db()
+        logger.info('База данных SQL создана')
+    except Exception as e:
+        logger.exception(f'Не удалось создать таблицу sql: {e}')
+        raise
     yield  # <-- запуск приложения
 
     # --- Shutdown (опционально) ---
@@ -31,32 +40,45 @@ class QueryCheck(BaseModel):
     user_id: int
     query: str
 
-@app.post("/ask")
-async def ask(request: QueryCheck):
+@app.post("/query")
+async def query(request: QueryCheck):
     """
     RAG-эндпоинт: получает запрос → выполняет действие через LLM.
     """
-    state = get_state(request.user_id)
+    # Загрузка сессии
+    try:
+        state = get_state(request.user_id)
+    except Exception as e:
+        logger.exception(f'Не удалось загрузить сессию для {request.user_id}: {e}')
+        raise 
 
-    result = await llm_app.ainvoke({
-        **state,
-        "messages": [HumanMessage(content=request.query)]
-    })
+    # Запрос к LLM
+    try:
+        result = await llm_app.ainvoke({
+            **state,
+            "messages": state['messages'] + [HumanMessage(content=request.query)]
+        })
+        response = result['messages'][-1]
+        logger.info(f'Ответ LLM: {response}')
+    except Exception as e:
+        logger.exception(f'Не удалось получить запрос от LLM: {e}')
+        raise
 
-    save_state(request.user_id, result)
-
-    return {'response': result['messages'][-1]}
+    # Сохранение сессии
+    try:
+        save_state(request.user_id, result)
+    except Exception as e:
+        logger.error(f'Не удалось сохранить сессию: {e}')
+    return {'response': response}
 
 @app.get("/health")
 async def health_check():
     try:
         # Тестовый запрос к LLM
         test_response = await llm_app.chat({
-            "messages":[HumanMessage(content="Верни {'task_key': 'TEST-1', 'summary': 'тест'}")]
+            "messages":[HumanMessage(content="Что такое RAG?")]
         })
-        # Пытаемся валидировать
-        QueryCheck.model_validate_json(test_response.message)
-        return {"status": "healthy"}
+        return {"response": test_response['messages'][-1]}
     except Exception as e:
-        logger.exception(f'FastAPI error: {e}')
+        logger.error(f'FastAPI error: {e}')
         return {"status": "unhealthy", "error": str(e)}

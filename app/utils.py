@@ -1,7 +1,8 @@
 import logging
 import hashlib
 
-logger = logging.getLogger(__name__)
+from app.logger import logger
+from app.settings import settings
 
 # load files into list
 def load_files(file_names: list) -> list:
@@ -23,5 +24,5 @@ def load_files(file_names: list) -> list:
 # логирование промпта
 def log_prompt(prompt: str) -> str:
     prompt_hash = hashlib.sha256(prompt.encode()).hexdigest()[:8]
-    logger.debug(f"Промпт (хэш: {prompt_hash}) отправлен в LLM")
+    logger.info(f"Промпт (хэш: {prompt_hash}) отправлен в LLM")
     return prompt_hash

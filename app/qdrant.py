@@ -1,8 +1,10 @@
 from ollama import AsyncClient
-from config import settings
-from utils import load_files
+from app.utils import load_files
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import VectorParams, Distance, PointStruct
+
+from app.logger import logger
+from app.settings import settings
 
 async def qdrant_startup():
     global qdrant, ollama
@@ -18,9 +20,11 @@ async def qdrant_startup():
         collection_name=settings.collection_name,
         vectors_config=VectorParams(size=768, distance=Distance.COSINE)
     )
-    
-    docs = load_files(['docs/agents.md', 'docs/fastapi.md', 'docs/rag.md'])
-    if not docs:
+
+    try: 
+        docs = load_files(['docs/agents.md', 'docs/fastapi.md', 'docs/rag.md'])
+    except Exception as e:
+        logger.error(f'Не удалось загрузить файлы: {e}')
         raise FileNotFoundError('Не удалось загрузить файлы')
 
     embeddings = await ollama.embed(model=settings.embedding_model, input=docs)
@@ -30,7 +34,7 @@ async def qdrant_startup():
     ]
     
     await qdrant.upsert(settings.collection_name, points)
-    print(f"✅ Коллекция '{settings.collection_name}' создана и заполнена.")
+    logger.info(f"✅ Коллекция '{settings.collection_name}' создана и заполнена.")
 
 async def qdrant_stop():
     await qdrant.delete_collection(settings.collection_name)
@@ -38,7 +42,8 @@ async def qdrant_stop():
 
 async def qdrant_search(question):
     # 1. Эмбеддинг запроса
-    query_vector = await ollama.embed(model=settings.embedding_model, input=question)[0]
+    embedding_response = await ollama.embed(model=settings.embedding_model, input=question)
+    query_vector = embedding_response['embeddings'][0]
 
     # 2. Поиск в Qdrant (асинхронно)
     search_result = await qdrant.query_points(

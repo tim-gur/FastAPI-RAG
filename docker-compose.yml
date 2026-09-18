@@ -16,12 +16,14 @@ services:
   ollama:
     image: ollama/ollama:latest
     ports:
-      - "11434:11434"
+      - "11435:11434"
     volumes:
       - ollama_data:/root/.ollama
   
   app:
     build: .
+    env_file:
+    - .env
     ports:
       - "8000:8000"
     environment:
@@ -30,8 +32,13 @@ services:
     depends_on:
       - qdrant
       - redis
+    volumes:
+      - ./app:/main/app
+      - ./db:/main/db
   
 volumes:
   qdrant_data:
   redis_data:
   ollama_data:
+  app:
+  db:

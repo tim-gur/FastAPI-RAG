@@ -1,35 +1,16 @@
 from langchain_core.tools import tool
 from langchain_ollama import ChatOllama
-from typing import Annotated, TypedDict
 from langgraph.prebuilt import ToolNode, InjectedState
 from langgraph.graph import StateGraph, START
-from langgraph.graph.message import add_messages
+from typing import Annotated, TypedDict
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
-from config import settings
-from qdrant import qdrant_search
-from utils import log_prompt
-from pydantic import BaseModel, field_validator
-import logging
-import re
+from app.qdrant import qdrant_search
+from app.utils import log_prompt
+from app.schemas import State
+from app.session import create_task_sql, add_comment_sql
 
-logger = logging.getLogger("agent")
-
-class AgentCheck(BaseModel):
-    task_id: str
-
-    @field_validator('task_id')
-    def check_task_id(cls, v):
-        if not re.match(r'^TASK-\d{3}$', v):
-            raise ValueError('Ошибочный формат task_id')
-        return v
-
-AgentCheck = AgentCheck()
-
-# === Состояние ===
-class State(TypedDict):
-    messages: Annotated[list, add_messages]
-    task_id: str
-    user_id: int
+from app.logger import logger
+from app.settings import settings
 
 # === LLM ===
 llm = ChatOllama(
@@ -42,7 +23,8 @@ llm = ChatOllama(
 @tool
 async def answer(question: str, state: Annotated[dict, InjectedState]) -> str:
     """Отвечает на вопрос пользователя"""
-    context = qdrant_search(question)
+    context = await qdrant_search(question)
+    logger.info(f"DEBUG retrieved context: {context!r}")
 
     prompt = f"""
     Отвечай только на основе контекста. Если не знаешь, скажи об этом, не придумывай ответ.".
@@ -67,18 +49,23 @@ async def answer(question: str, state: Annotated[dict, InjectedState]) -> str:
     return response.content
 
 @tool
-def create_task() -> str:
+def create_task(user_id: int) -> str:
     """Создаёт задачу и возвращает её ID."""
-    return "TASK-123"
+    try:
+        task_id = create_task_sql(user_id)
+        return task_id
+    except Exception as e:
+        logger.error(f'Не получилось добавить задание: {e}')
+        raise
 
 @tool
-def add_comment(task_id: str, comment: str) -> str:
+def add_comment(user_id: int, task_id: int, comment: str) -> str:
     """Добавляет комментарий к задаче по ID."""
-    check = AgentCheck(task_id=task_id)
     try:
-        return f'Комментарий "{comment}" успешно добавлен к задаче с ID {check.task_id}.'
-    except ValueError as e:
-        logging.error('Ошибочный task_id:{task_id}')
+        add_comment_sql(user_id, task_id, comment)
+        return f'Комментарий добавлен к задаче {task_id}.'
+    except Exception as e:
+        logger.error(f'Не получилось добавить комментарий: {e}')
         raise
 
 # adding tools
@@ -90,8 +77,17 @@ llm_with_tools = llm.bind_tools(tools)
 # === Узел агента ===
 def call_model(state: State):
     system = SystemMessage(
-        content=f"Ты — агент управления задачами. Текущий task_id: {state['task_id'] or 'не задан'}. "
-                "Если задача не создана — сначала вызови create_task. Не выдумывай ID."
+        content=f"""Ты — агент, который либо отвечает на вопросы пользователя по документации, 
+                    либо помогает управлять задачами (создание задачи, добавление комментариев).
+
+                    Текущий task_id: {state['task_id'] or 'не задан'}.
+
+                    Правила:
+                    - Если пользователь задаёт вопрос по документации — вызови инструмент answer.
+                    - Если пользователь просит создать задачу — вызови create_task (только если task_id ещё не задан).
+                    - Если пользователь просит добавить комментарий к задаче — вызови add_comment, 
+                    используя текущий task_id. Не выдумывай ID.
+                    - Не вызывай create_task, если пользователь не просил создать задачу."""
     )
     messages = [system] + state["messages"]
     return {"messages": [llm_with_tools.invoke(messages)]}
@@ -113,7 +109,7 @@ workflow.add_node("update", update_task_id)
 
 workflow.add_edge(START, "agent")
 workflow.add_conditional_edges(
-    "agent",
+    "agent",    
     lambda state: "tools" if state["messages"][-1].tool_calls else "__end__"
 )
 workflow.add_edge("tools", "update")
