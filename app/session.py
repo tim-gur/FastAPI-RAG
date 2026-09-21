@@ -37,6 +37,7 @@ def init_db():
     conn.commit()
     conn.close()
 
+# создание задачи в sql
 def create_task_sql(user_id: int) -> int:
     conn = sqlite3.connect(settings.db_path)
     cursor = conn.execute(
@@ -48,6 +49,7 @@ def create_task_sql(user_id: int) -> int:
     conn.close()
     return task_id
 
+# добавление комментария к задаче
 def add_comment_sql(user_id: int, task_id: int, comment: str) -> None:
     conn = sqlite3.connect(settings.db_path)
     cursor = conn.execute(

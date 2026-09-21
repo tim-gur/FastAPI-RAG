@@ -5,8 +5,9 @@ from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 
 from app.qdrant import qdrant_startup, qdrant_stop
-from app.session import init_db, get_state, save_state
+from app.session import init_db, get_state, save_state, r
 from app.agent import llm_app
+from app.schemas import QueryCheck
 
 from app.logger import logger
 from app.settings import settings
@@ -35,10 +36,6 @@ async def lifespan(app: FastAPI):
 
 # Старт сервиса
 app = FastAPI(title="RAG Service", lifespan=lifespan)
-
-class QueryCheck(BaseModel):
-    user_id: int
-    query: str
 
 @app.post("/query")
 async def query(request: QueryCheck):
@@ -72,13 +69,5 @@ async def query(request: QueryCheck):
     return {'response': response}
 
 @app.get("/health")
-async def health_check():
-    try:
-        # Тестовый запрос к LLM
-        test_response = await llm_app.chat({
-            "messages":[HumanMessage(content="Что такое RAG?")]
-        })
-        return {"response": test_response['messages'][-1]}
-    except Exception as e:
-        logger.error(f'FastAPI error: {e}')
-        return {"status": "unhealthy", "error": str(e)}
+def health_check():
+    return {'status': 'healthy'}

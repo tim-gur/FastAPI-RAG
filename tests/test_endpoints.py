@@ -15,7 +15,6 @@ def test_query_question(client):
 
 def test_query_create_task(client):
     '''Тест создания задания'''
-    '''Тест вопроса к llm'''
     response = client.post('/query', json={'user_id': 1, 'query': 'Создай новое задание'})
     assert response.status_code == 200
 

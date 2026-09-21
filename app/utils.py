@@ -1,4 +1,3 @@
-import logging
 import hashlib
 
 from app.logger import logger

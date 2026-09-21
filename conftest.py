@@ -1,9 +1,7 @@
 import pytest
 import sqlite3
 from app.qdrant import qdrant_startup
-from app.session import get_state
 from app.main import app
-from app.agent import llm_app
 from fastapi.testclient import TestClient
 
 @pytest.fixture
