@@ -14,23 +14,25 @@ from app.settings import settings
 
 # === LLM ===
 llm = ChatOllama(
-    model=settings.llm_model,
+    model=settings.llm_model, 
     temperature=0,
     base_url=settings.ollama_host
 )
 
-# === Инструменты === (unchanged)
+# === Инструменты ===
 @tool
 async def answer(question: str, state: Annotated[dict, InjectedState]) -> str:
     """Отвечает на вопрос пользователя"""
     context = await qdrant_search(question)
     logger.info(f"DEBUG retrieved context: {context!r}")
+
     prompt = f"""
     Отвечай только на основе контекста. Если не знаешь, скажи об этом, не придумывай ответ.".
     Контекст: {context}
     Вопрос: {question}
     """
     log_prompt(prompt)
+
     history = state["messages"][:-1]
     try:
         response = await llm.ainvoke([
@@ -50,7 +52,8 @@ async def answer(question: str, state: Annotated[dict, InjectedState]) -> str:
 def create_task(user_id: int) -> str:
     """Создаёт задачу и возвращает её ID."""
     try:
-        return create_task_sql(user_id)
+        task_id = create_task_sql(user_id)
+        return task_id
     except Exception as e:
         logger.error(f'Не получилось добавить задание: {e}')
         raise
@@ -65,11 +68,13 @@ def add_comment(user_id: int, task_id: int, comment: str) -> str:
         logger.error(f'Не получилось добавить комментарий: {e}')
         raise
 
+# adding tools
 tools = [answer, create_task, add_comment]
 tool_node = ToolNode(tools)
+
 llm_with_tools = llm.bind_tools(tools)
 
-# === Узел агента: решает, вызывать ли инструмент ===
+# === Узел агента ===
 def call_model(state: State):
     system = SystemMessage(
         content=f"""Ты — агент, который либо отвечает на вопросы пользователя по документации, 
@@ -78,26 +83,16 @@ def call_model(state: State):
                     Текущий task_id: {state['task_id'] or 'не задан'}.
 
                     Правила:
-                    - Вопрос по документации → вызови answer.
-                    - Просьба создать задачу → вызови create_task (если task_id ещё не задан).
-                    - Просьба добавить комментарий → вызови add_comment с текущим task_id.
+                    - Вопрос по документации → вызови answer ОДИН РАЗ, затем ответь пользователю текстом на основе результата.
+                    - Просьба создать задачу → вызови create_task ОДИН РАЗ (если task_id ещё не задан), затем подтверди текстом.
+                    - Просьба добавить комментарий → вызови add_comment ОДИН РАЗ с текущим task_id, затем подтверди текстом.
+                    - Если в истории уже есть результат вызова инструмента (ToolMessage) для текущего запроса — 
+                      НЕ вызывай инструмент снова. Сформулируй окончательный ответ пользователю текстом, 
+                      используя этот результат.
                     - Не вызывай create_task, если пользователь не просил создать задачу."""
     )
     messages = [system] + state["messages"]
     return {"messages": [llm_with_tools.invoke(messages)]}
-
-
-# === Узел агента: формирует финальный текстовый ответ, БЕЗ доступа к инструментам ===
-def respond(state: State):
-    """Генерирует финальный текстовый ответ на основе результата инструмента.
-    Использует обычный llm (без bind_tools) — физически не может вызвать инструмент снова."""
-    system = SystemMessage(
-        content="""Сформулируй краткий, понятный ответ пользователю на основе результата 
-        выполненного действия (последнее сообщение в истории). Отвечай только текстом."""
-    )
-    messages = [system] + state["messages"]
-    response = llm.invoke(messages)
-    return {"messages": [response]}
 
 
 # === Узел обновления состояния ===
@@ -113,15 +108,13 @@ workflow = StateGraph(State)
 workflow.add_node("agent", call_model)
 workflow.add_node("tools", tool_node)
 workflow.add_node("update", update_task_id)
-workflow.add_node("respond", respond)
 
 workflow.add_edge(START, "agent")
 workflow.add_conditional_edges(
-    "agent",
+    "agent",    
     lambda state: "tools" if state["messages"][-1].tool_calls else "__end__"
 )
 workflow.add_edge("tools", "update")
-workflow.add_edge("update", "respond")
-workflow.add_edge("respond", "__end__")
+workflow.add_edge("update", "agent")
 
 llm_app = workflow.compile()

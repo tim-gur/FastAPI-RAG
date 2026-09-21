@@ -35,6 +35,7 @@ services:
     volumes:
       - ./app:/main/app
       - ./db:/main/db
+      - ./docs:/main/docs
   
 volumes:
   qdrant_data:
@@ -42,3 +43,4 @@ volumes:
   ollama_data:
   app:
   db:
+  docs:
