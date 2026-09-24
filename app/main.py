@@ -3,6 +3,7 @@ from fastapi import FastAPI, Body, HTTPException
 from contextlib import asynccontextmanager
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
+from fastapi import HTTPException
 
 from app.qdrant import qdrant_startup, qdrant_stop
 from app.session import init_db, get_state, save_state, r
@@ -20,14 +21,14 @@ async def lifespan(app: FastAPI):
         logger.info('Qdrant загружен')
     except Exception as e:
         logger.exception(f'Qdrant не смог загрузиться: {e}')
-        raise
+        raise HTTPException(status_code=503, detail="База данных временно недоступна")
 
     try:
         init_db()
         logger.info('База данных SQL создана')
     except Exception as e:
         logger.exception(f'Не удалось создать таблицу sql: {e}')
-        raise
+        raise HTTPException(status_code=503, detail="База данных временно недоступна")
     yield  # <-- запуск приложения
 
     # --- Shutdown (опционально) ---
@@ -47,7 +48,7 @@ async def query(request: QueryCheck):
         state = get_state(request.user_id)
     except Exception as e:
         logger.exception(f'Не удалось загрузить сессию для {request.user_id}: {e}')
-        raise 
+        raise HTTPException(status_code=503, detail="Сессия временно недоступна")
 
     # Запрос к LLM
     try:
@@ -59,7 +60,7 @@ async def query(request: QueryCheck):
         logger.info(f'Ответ LLM: {response}')
     except Exception as e:
         logger.exception(f'Не удалось получить запрос от LLM: {e}')
-        raise
+        raise HTTPException(status_code=502, detail="Не удалось получить ответ от LLM")
 
     # Сохранение сессии
     try:
