@@ -10,3 +10,4 @@ langgraph==1.2.11
 prometheus-fastapi-instrumentator==8.1.0
 pydantic_settings==2.10.1
 pytest-asyncio==1.4.0
+langchain-text-splitters==1.1.2

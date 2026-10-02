@@ -19,12 +19,20 @@ llm = ChatOllama(
     base_url=settings.ollama_host
 )
 
-# === Инструменты === (unchanged)
+# === Инструменты ===
 @tool
 async def answer(question: str, state: Annotated[dict, InjectedState]) -> str:
     """Отвечает на вопрос пользователя"""
-    context = await qdrant_search(question)
-    logger.info(f"DEBUG retrieved context: {context!r}")
+    context, hits = await qdrant_search(question)
+
+    # Логирование контекста
+    logger.info(
+        "retrieval | query=%r | hits=%s",
+        question,
+        [(h["source"], h["section"], round(h["score"], 3)) for h in hits],
+    )
+    logger.debug("retrieved context: %r", context)
+
     prompt = f"""
     Отвечай только на основе контекста. Если не знаешь, скажи об этом, не придумывай ответ.".
     Контекст: {context}
