@@ -55,20 +55,20 @@ async def answer(question: str, state: Annotated[dict, InjectedState]) -> str:
     return response.content
 
 @tool
-def create_task(user_id: int) -> str:
+def create_task(state: Annotated[dict, InjectedState]) -> str:
     """Создаёт задачу и возвращает её ID."""
     try:
-        return create_task_sql(user_id)
+        return create_task_sql(state["user_id"])
     except Exception as e:
         logger.error(f'Не получилось добавить задание: {e}')
         raise
 
 @tool
-def add_comment(user_id: int, task_id: int, comment: str) -> str:
+def add_comment(comment: str, state: Annotated[dict, InjectedState] ) -> str:
     """Добавляет комментарий к задаче по ID."""
     try:
-        add_comment_sql(user_id, task_id, comment)
-        return f'Комментарий добавлен к задаче {task_id}.'
+        add_comment_sql(state["user_id"], state["task_id"], comment)
+        return f'Комментарий добавлен к задаче {state["task_id"]}.'
     except Exception as e:
         logger.error(f'Не получилось добавить комментарий: {e}')
         raise
@@ -86,10 +86,10 @@ def call_model(state: State):
                     Текущий task_id: {state['task_id'] or 'не задан'}.
 
                     Правила:
-                    - Вопрос по документации → вызови answer.
-                    - Просьба создать задачу → вызови create_task (если task_id ещё не задан).
-                    - Просьба добавить комментарий → вызови add_comment с текущим task_id.
-                    - Не вызывай create_task, если пользователь не просил создать задачу."""
+                    - Вопрос по документации (агенты, FastAPI, RAG) или любой другой информационный вопрос → вызови answer.
+                    - Просьба создать задачу → вызови create_task, только если task_id не задан. Если задача уже есть, не вызывай инструменты: скажи, что задача уже создана, и назови её номер.
+                    - Просьба добавить комментарий → вызови add_comment, только если task_id задан. Если задачи нет, не вызывай инструменты: попроси сначала создать задачу.
+                    - Приветствия, благодарности, вопросы о твоих возможностях или о текущем task_id, а также просьбы, которые ты не умеешь выполнять (удалить, закрыть, показать список задач) → не вызывай инструменты, ответь текстом."""
     )
     messages = [system] + state["messages"]
     return {"messages": [llm_with_tools.invoke(messages)]}

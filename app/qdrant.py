@@ -37,7 +37,7 @@ async def qdrant_startup() -> None:
         PointStruct(id=c['id'],
                     vector=emb,
                     payload={'text': c['text'], 'source': c['source'], 'section': c['section']})
-        for c, emb in enumerate(zip(chunks, embeddings['embeddings']))
+        for c, emb in zip(chunks, embeddings['embeddings'])
     ]
     
     await qdrant.upsert(settings.collection_name, points)

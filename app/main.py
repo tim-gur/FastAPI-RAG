@@ -54,6 +54,7 @@ async def query(request: QueryCheck):
     try:
         result = await llm_app.ainvoke({
             **state,
+            "user_id": request.user_id,
             "messages": state['messages'] + [HumanMessage(content=request.query)]
         })
         response = result['messages'][-1]

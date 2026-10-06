@@ -1,0 +1,50 @@
+{"id":"r001","query":"Как объявить path-параметр в FastAPI?","state_task_id":null,"expected_action":"answer_rag","split":"dev","tags":["question","ru"]}
+{"id":"r002","query":"что такое RAG и зачем он нужен","state_task_id":null,"expected_action":"answer_rag","split":"test","tags":["question","ru","casual"]}
+{"id":"r003","query":"Объясни, чем агент отличается от обычного вызова LLM","state_task_id":null,"expected_action":"answer_rag","split":"dev","tags":["question","ru"]}
+{"id":"r004","query":"Как в FastAPI подключить зависимость через Depends?","state_task_id":null,"expected_action":"answer_rag","split":"test","tags":["question","ru"]}
+{"id":"r005","query":"Что такое чанкинг в RAG?","state_task_id":null,"expected_action":"answer_rag","split":"dev","tags":["question","ru"]}
+{"id":"r006","query":"расскажи про валидацию данных в FastAPI","state_task_id":null,"expected_action":"answer_rag","split":"test","tags":["question","ru","casual"]}
+{"id":"r007","query":"Как агент решает, какой инструмент вызвать?","state_task_id":null,"expected_action":"answer_rag","split":"dev","tags":["question","ru"]}
+{"id":"r008","query":"Для чего нужна векторная база данных?","state_task_id":null,"expected_action":"answer_rag","split":"test","tags":["question","ru"]}
+{"id":"r009","query":"Как Pydantic используется в FastAPI?","state_task_id":null,"expected_action":"answer_rag","split":"dev","tags":["question","ru"]}
+{"id":"r010","query":"Что такое эмбеддинги?","state_task_id":null,"expected_action":"answer_rag","split":"test","tags":["question","ru","short"]}
+{"id":"r011","query":"Можешь объяснить, как устроен tool calling у агентов?","state_task_id":null,"expected_action":"answer_rag","split":"dev","tags":["question","ru","english_terms"]}
+{"id":"r012","query":"Как обрабатывать ошибки в FastAPI?","state_task_id":null,"expected_action":"answer_rag","split":"test","tags":["question","ru"]}
+{"id":"r013","query":"Чем dense-поиск отличается от гибридного?","state_task_id":null,"expected_action":"answer_rag","split":"dev","tags":["question","ru","english_terms"]}
+{"id":"r014","query":"fastapi lifespan это что вообще","state_task_id":null,"expected_action":"answer_rag","split":"test","tags":["question","ru","casual","english_terms"]}
+{"id":"r015","query":"Какая сегодня погода в Берлине?","state_task_id":null,"expected_action":"answer_rag","split":"dev","tags":["out_of_domain","ru"]}
+{"id":"r016","query":"Посоветуй рецепт борща","state_task_id":null,"expected_action":"answer_rag","split":"test","tags":["out_of_domain","ru"]}
+{"id":"r017","query":"Кто выиграл чемпионат мира по футболу в 2018 году?","state_task_id":null,"expected_action":"answer_rag","split":"dev","tags":["out_of_domain","ru"]}
+{"id":"r018","query":"Создай задачу","state_task_id":null,"expected_action":"create_task","split":"dev","tags":["imperative","ru","short"]}
+{"id":"r019","query":"Заведи новую задачу, пожалуйста","state_task_id":null,"expected_action":"create_task","split":"test","tags":["polite","ru"]}
+{"id":"r020","query":"Мне нужна новая задача","state_task_id":null,"expected_action":"create_task","split":"dev","tags":["indirect","ru"]}
+{"id":"r021","query":"создай таск","state_task_id":null,"expected_action":"create_task","split":"test","tags":["casual","ru","short"]}
+{"id":"r022","query":"Можешь создать для меня задачу?","state_task_id":null,"expected_action":"create_task","split":"dev","tags":["polite","ru"]}
+{"id":"r023","query":"Открой новую задачу","state_task_id":null,"expected_action":"create_task","split":"test","tags":["imperative","ru"]}
+{"id":"r024","query":"Create a new task","state_task_id":null,"expected_action":"create_task","split":"dev","tags":["imperative","en"]}
+{"id":"r025","query":"Хочу создать задачу: обновить документацию по API","state_task_id":null,"expected_action":"create_task","split":"test","tags":["with_description","ru"]}
+{"id":"r026","query":"Создай задачу и объясни, что такое Depends","state_task_id":null,"expected_action":"create_task","split":"dev","tags":["mixed","edge","ru"]}
+{"id":"r027","query":"Сначала создай задачу, потом расскажи про чанкинг","state_task_id":null,"expected_action":"create_task","split":"test","tags":["mixed","edge","ru"]}
+{"id":"r028","query":"оформи на меня новую задачу","state_task_id":null,"expected_action":"create_task","split":"dev","tags":["casual","ru"]}
+{"id":"r029","query":"Добавь комментарий: проверили на стейдже","state_task_id":"12","expected_action":"add_comment","split":"dev","tags":["imperative","with_task","ru"]}
+{"id":"r030","query":"Напиши в комментарии, что тесты прошли","state_task_id":"7","expected_action":"add_comment","split":"test","tags":["indirect","with_task","ru"]}
+{"id":"r031","query":"Оставь комментарий к задаче: блокер по доступу к БД","state_task_id":"3","expected_action":"add_comment","split":"dev","tags":["imperative","with_task","ru"]}
+{"id":"r032","query":"добавь коммент — деплой завершён","state_task_id":"21","expected_action":"add_comment","split":"test","tags":["casual","with_task","ru"]}
+{"id":"r033","query":"Прокомментируй задачу: ждём ревью","state_task_id":"5","expected_action":"add_comment","split":"dev","tags":["imperative","with_task","ru"]}
+{"id":"r034","query":"Допиши к задаче, что заказчик согласовал макет","state_task_id":"9","expected_action":"add_comment","split":"test","tags":["indirect","with_task","ru"]}
+{"id":"r035","query":"Add a comment: fixed in the latest commit","state_task_id":"14","expected_action":"add_comment","split":"dev","tags":["imperative","with_task","en"]}
+{"id":"r036","query":"Хочу оставить комментарий: нужен ещё один тест-кейс","state_task_id":"2","expected_action":"add_comment","split":"test","tags":["indirect","with_task","ru"]}
+{"id":"r037","query":"Зафиксируй в задаче, что баг воспроизводится только в Safari","state_task_id":"30","expected_action":"add_comment","split":"dev","tags":["indirect","with_task","ru"]}
+{"id":"r038","query":"Комментарий: перенесли срок на пятницу","state_task_id":"18","expected_action":"add_comment","split":"test","tags":["short","with_task","ru"]}
+{"id":"r039","query":"Добавь комментарий: проверили на стейдже","state_task_id":null,"expected_action":"none","split":"dev","tags":["no_task","edge","ru"]}
+{"id":"r040","query":"Напиши комментарий, что всё готово","state_task_id":null,"expected_action":"none","split":"test","tags":["no_task","edge","ru"]}
+{"id":"r041","query":"оставь коммент к задаче","state_task_id":null,"expected_action":"none","split":"dev","tags":["no_task","edge","ru","casual"]}
+{"id":"r042","query":"Создай задачу","state_task_id":"12","expected_action":"none","split":"test","tags":["task_exists","edge","ru"]}
+{"id":"r043","query":"Заведи ещё одну новую задачу","state_task_id":"5","expected_action":"none","split":"dev","tags":["task_exists","edge","ru"]}
+{"id":"r044","query":"Привет","state_task_id":null,"expected_action":"none","split":"test","tags":["greeting","ru","short"]}
+{"id":"r045","query":"Спасибо, понятно","state_task_id":null,"expected_action":"none","split":"dev","tags":["thanks","ru","short"]}
+{"id":"r046","query":"Кто ты и что умеешь?","state_task_id":null,"expected_action":"none","split":"test","tags":["meta","edge","ru"]}
+{"id":"r047","query":"Какой у меня сейчас номер задачи?","state_task_id":"12","expected_action":"none","split":"dev","tags":["meta","edge","ru"]}
+{"id":"r048","query":"Удали задачу 5","state_task_id":"5","expected_action":"none","split":"test","tags":["unsupported","edge","ru"]}
+{"id":"r049","query":"Покажи список всех моих задач","state_task_id":null,"expected_action":"none","split":"dev","tags":["unsupported","edge","ru"]}
+{"id":"r050","query":"Закрой задачу","state_task_id":"12","expected_action":"none","split":"test","tags":["unsupported","edge","ru"]}
