@@ -94,8 +94,11 @@ async def evaluate_sample(sample: SingleTurnSample) -> Result:
     )
 
 # Запуск оценки 
-async def evaluate():
+async def main():
     tasks = [evaluate_sample(sample) for sample in dataset.samples]
     results = await asyncio.gather(*tasks)
     for i, res in enumerate(results):
         print(f"Sample {i+1}: {res}")
+
+if __name__ == "__main__":
+    asyncio.run(main())
