@@ -34,7 +34,7 @@ async def answer(question: str, state: Annotated[dict, InjectedState]) -> str:
     logger.debug("retrieved context: %r", context)
 
     prompt = f"""
-    Отвечай только на основе контекста. Если не знаешь, скажи об этом, не придумывай ответ.".
+    Отвечай только на основе контекста. Если не знаешь, скажи об этом, не придумывай ответ."
     Контекст: {context}
     Вопрос: {question}
     """

@@ -44,6 +44,7 @@
 ```bash
    docker compose exec ollama ollama pull llama3.1
    docker compose exec ollama ollama pull nomic-embed-text
+   docker compose exec ollama ollama pull qwen2.5:7b
 ```
 4. Тестирование:
 ```bash
@@ -53,3 +54,8 @@
 ```bash
     python3 test_requests.py
 ```
+
+# Что можно сделать в будущем
+1. Добавить трекинг Mlflow
+2. Провести оценку метрик RAGAS
+3. Для эмбеддинга попробовать модель bge-m3
