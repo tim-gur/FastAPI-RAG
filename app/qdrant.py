@@ -3,6 +3,7 @@ from app.utils import load_files
 from qdrant_client import AsyncQdrantClient
 from qdrant_client.models import VectorParams, Distance, PointStruct
 from app.chunking import load_chunks
+from app.metrics import RETRIEVAL_SECONDS, TOP_SCORE
 
 from app.logger import logger
 from app.settings import settings
@@ -49,16 +50,17 @@ async def qdrant_stop():
 
 async def qdrant_search(question) -> tuple[str, list[dict]]:
     # 1. Эмбеддинг запроса
-    embedding_response = await ollama.embed(model=settings.embedding_model, input=f'search_query: {question}')
-    query_vector = embedding_response['embeddings'][0]
+    with RETRIEVAL_SECONDS.time():
+        embedding_response = await ollama.embed(model=settings.embedding_model, input=f'search_query: {question}')
+        query_vector = embedding_response['embeddings'][0]
 
-    # 2. Поиск в Qdrant (асинхронно)
-    search_result = await qdrant.query_points(
-        collection_name=settings.collection_name,
-        query=query_vector,
-        limit=3,
-        with_payload=True
-    )
+        # 2. Поиск в Qdrant (асинхронно)
+        search_result = await qdrant.query_points(
+            collection_name=settings.collection_name,
+            query=query_vector,
+            limit=3,
+            with_payload=True
+        )
     hits = [
         {
             "text": p.payload["text"],
@@ -68,6 +70,8 @@ async def qdrant_search(question) -> tuple[str, list[dict]]:
         }
         for p in search_result.points
     ]
+    if hits:
+        TOP_SCORE.observe(hits[0]["score"])
 
     context = "\n\n---\n\n".join(
         f"[{h['source']} > {h['section']}]\n{h['text']}" for h in hits

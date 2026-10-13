@@ -4,6 +4,7 @@ from contextlib import asynccontextmanager
 from langchain_core.messages import HumanMessage
 from pydantic import BaseModel
 from fastapi import HTTPException
+from prometheus_fastapi_instrumentator import Instrumentator
 
 from app.qdrant import qdrant_startup, qdrant_stop
 from app.session import init_db, get_state, save_state, r
@@ -37,6 +38,9 @@ async def lifespan(app: FastAPI):
 
 # Старт сервиса
 app = FastAPI(title="RAG Service", lifespan=lifespan)
+
+# Prometheus
+Instrumentator().instrument(app).expose(app)
 
 @app.post("/query")
 async def query(request: QueryCheck):

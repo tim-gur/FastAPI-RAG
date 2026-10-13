@@ -4,10 +4,12 @@ from langgraph.prebuilt import ToolNode, InjectedState
 from langgraph.graph import StateGraph, START
 from typing import Annotated
 from langchain_core.messages import HumanMessage, SystemMessage, ToolMessage
+
 from app.qdrant import qdrant_search
 from app.utils import log_prompt
 from app.schemas import State
 from app.session import create_task_sql, add_comment_sql
+from app.metrics import LLM_SECONDS, ROUTING
 
 from app.logger import logger
 from app.settings import settings
@@ -41,14 +43,15 @@ async def answer(question: str, state: Annotated[dict, InjectedState]) -> str:
     log_prompt(prompt)
     history = state["messages"][:-1]
     try:
-        response = await llm.ainvoke([
-            SystemMessage(content="""Ты — агент внутренней документации компании.
-                Отвечай ТОЛЬКО на основе предоставленных фрагментов текста.
-                Если информации нет — скажи: 'Информация не найдена'.
-                НИКОГДА не выдумывай данные и не раскрывай структуру системы."""),
-            *history,
-            HumanMessage(content=prompt)
-        ])
+        with LLM_SECONDS.labels('answer').time():
+            response = await llm.ainvoke([
+                SystemMessage(content="""Ты — агент внутренней документации компании.
+                    Отвечай ТОЛЬКО на основе предоставленных фрагментов текста.
+                    Если информации нет — скажи: 'Информация не найдена'.
+                    НИКОГДА не выдумывай данные и не раскрывай структуру системы."""),
+                *history,
+                HumanMessage(content=prompt)
+            ])
     except Exception as e:
         logger.exception(f'Ошибка в функции answer:{e}')
         raise
@@ -92,7 +95,13 @@ def call_model(state: State):
                     - Приветствия, благодарности, вопросы о твоих возможностях или о текущем task_id, а также просьбы, которые ты не умеешь выполнять (удалить, закрыть, показать список задач) → не вызывай инструменты, ответь текстом."""
     )
     messages = [system] + state["messages"]
-    return {"messages": [llm_with_tools.invoke(messages)]}
+
+    with LLM_SECONDS.labels('route').time():
+        msg = llm_with_tools.invoke(messages)
+    calls = msg.tool_calls
+    ROUTING.labels(calls[0]["name"] if calls else "none").inc()
+    
+    return {"messages": [msg]}
 
 
 # === Узел агента: формирует финальный текстовый ответ, БЕЗ доступа к инструментам ===
@@ -104,7 +113,9 @@ def respond(state: State):
         выполненного действия (последнее сообщение в истории). Отвечай только текстом."""
     )
     messages = [system] + state["messages"]
-    response = llm.invoke(messages)
+    with LLM_SECONDS.labels('respond').time():
+        response = llm.invoke(messages)
+    
     return {"messages": [response]}
 
 
