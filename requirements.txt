@@ -11,4 +11,5 @@ prometheus-fastapi-instrumentator==8.1.0
 pydantic_settings==2.10.1
 pytest-asyncio==1.4.0
 langchain-text-splitters==1.1.2
-ragas
+ragas==0.4.3
+openai==1.109.1

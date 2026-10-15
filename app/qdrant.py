@@ -21,7 +21,7 @@ async def qdrant_startup() -> None:
     
     await qdrant.create_collection(
         collection_name=settings.collection_name,
-        vectors_config=VectorParams(size=768, distance=Distance.COSINE)
+        vectors_config=VectorParams(size=1024, distance=Distance.COSINE)
     )
 
     # Загрузка чанков
@@ -33,7 +33,7 @@ async def qdrant_startup() -> None:
     
     logger.info(f"Сделано {len(chunks)} чанков")
 
-    embeddings = await ollama.embed(model=settings.embedding_model, input=[f"search document: {c['section']}\n{c['text']}" for c in chunks])
+    embeddings = await ollama.embed(model=settings.embedding_model, input=[f"search_document: {c['section']}\n{c['text']}" for c in chunks])
     points = [
         PointStruct(id=c['id'],
                     vector=emb,

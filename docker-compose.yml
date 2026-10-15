@@ -19,6 +19,13 @@ services:
       - "11435:11434"
     volumes:
       - ollama_data:/root/.ollama
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [gpu]
   
   prometheus:
     image: prom/prometheus
@@ -32,7 +39,7 @@ services:
   grafana:
     image: grafana/grafana
     env_file:
-      - ./env
+      - .env
     ports:
       - 3000:3000
     environment:

@@ -1,0 +1,13 @@
+
+{"id": "q001", "question": "Что такое программа?", "source": "fastapi.md", "section": "Что такое программа"}
+{"id": "q002", "question": "Что такое FastAPI Cloud?", "source": "fastapi.md", "section": "FastAPI Cloud { #fastapi-cloud }"}
+{"id": "q003", "question": "Как посмотреть логи в Ollama?", "source": "ollama.md", "section": "Как посмотреть логи?"}
+{"id": "q004", "question": "Чем dense-поиск отличается от гибридного?", "source": null, "section": null}
+{"id": "q005", "question": "Для чего нужна векторная база данных?", "source": null, "section": null}
+{"id": "q006", "question": "Как использовать Ollama в Docker?", "source": "ollama.md", "section": "Как использовать Ollama через прокси в Docker?"}
+{"id": "q007", "question": "отключить облачные функции Ollama", "source": "ollama.md", "section": "Как отключить облачные функции Ollama?"}
+{"id": "q008", "question": "Какая размерность вектора в Qdrant?", "source": "qdrant.md", "section": "Какова максимальная размерность вектора, поддерживаемая Qdrant?"}
+{"id": "q009", "question": "Что такое битовая маска в Qdrant?", "source": "qdrant.md", "section": "Как внутри Qdrant работает удаление точки? Перестраивается ли индекс после каждого удаления?"}
+{"id": "q010", "question": "Что такое Qdrant?", "source": null, "section": null}
+{"id": "q011", "question": "Как делать поиск по векторам?", "source": null, "section": null}
+{"id": "q012", "question": "Что такое Python?", "source": null, "section": null}
